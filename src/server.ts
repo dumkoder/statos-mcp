@@ -4,7 +4,6 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
-
 import { StatosApiClient } from "./api.js";
 import { getAccount, getAccountInputSchema } from "./tools/get-account.js";
 import {
@@ -13,8 +12,9 @@ import {
 } from "./tools/get-match-picks.js";
 import { listLeagues, listLeaguesInputSchema } from "./tools/list-leagues.js";
 import { listPicks, listPicksInputSchema } from "./tools/list-picks.js";
+import { formatToolError } from "./util/format-error.js";
 
-const PACKAGE_VERSION = "0.2.0";
+const PACKAGE_VERSION = "0.2.1";
 
 // ── Tool JSON-Schemas (advertised in tools/list) ─────────────────────────────
 // Hand-written rather than zod-derived to (a) avoid an extra dependency and
@@ -147,8 +147,26 @@ export function createServer(cfg: ServerConfig): Server {
     userAgent: `@statospro/mcp/${PACKAGE_VERSION}`,
   });
 
+  // Implementation metadata advertised in the `initialize` response.
+  // `title` + `description` + `icons` give MCP clients (Claude Desktop,
+  // Claude Code) a proper display label and graphic in their tool picker
+  // instead of the bare package name. The icon URL points at the same
+  // svg the Statos web app uses; clients can rescale it freely.
   const server = new Server(
-    { name: "@statospro/mcp", version: PACKAGE_VERSION },
+    {
+      name: "@statospro/mcp",
+      version: PACKAGE_VERSION,
+      title: "Statos",
+      description:
+        "Read Statos's betting picks, leagues, and account state from any MCP-capable AI client.",
+      websiteUrl: "https://statos.pro",
+      icons: [
+        {
+          src: "https://statos.pro/min-logo.svg",
+          mimeType: "image/svg+xml",
+        },
+      ],
+    },
     { capabilities: { tools: {} } },
   );
 
@@ -245,10 +263,11 @@ export function createServer(cfg: ServerConfig): Server {
           };
       }
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
       return {
         isError: true,
-        content: [{ type: "text", text: `Tool ${name} failed: ${msg}` }],
+        content: [
+          { type: "text", text: `Tool ${name} failed: ${formatToolError(err)}` },
+        ],
       };
     }
   });

@@ -5,6 +5,30 @@ All notable changes to `@statospro/mcp`.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.2.1] — 2026-05-27
+
+Polish release. Pure metadata + UX; no protocol or behaviour changes.
+
+### Added
+
+- `serverInfo.title = "Statos"` — human-readable display name in MCP
+  client tool pickers (was bare `@statospro/mcp` package name before).
+- `serverInfo.description` — one-line summary of the server's purpose.
+- `serverInfo.websiteUrl = "https://statos.pro"`.
+- `serverInfo.icons` — array with `https://statos.pro/min-logo.svg`
+  (the same SVG the prod web app uses). Single entry; MCP clients can
+  rescale to any picker size.
+- `util/format-error.ts` + 5 unit tests: a small formatter that turns
+  `ZodError` instances into a `"path: message; path: message"`
+  one-liner. Surfaces in MCP `isError` content text. Non-Zod errors
+  fall through to `.message`.
+
+### Changed
+
+- Tool input-validation errors render as
+  `Tool list_picks failed: limit: Number must be greater than or equal to 1`
+  instead of the raw zod-issue-array JSON blob.
+
 ## [0.2.0] — 2026-05-27
 
 First publish to npm under the `@statospro` org (the `@statos` org name was
