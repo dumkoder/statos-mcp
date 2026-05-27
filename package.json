@@ -3,21 +3,22 @@
   "version": "0.2.0",
   "description": "Model Context Protocol server for Statos — connect AI assistants (Claude Desktop, Claude Code) to Statos picks.",
   "type": "module",
-  "license": "UNLICENSED",
-  "private": true,
+  "license": "MIT",
   "bin": {
     "statos-mcp": "./dist/cli.js"
   },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
     "build": "tsc",
     "dev": "tsx src/cli.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "prepublishOnly": "pnpm run build"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.4",
@@ -32,5 +33,27 @@
   "engines": {
     "node": ">=20"
   },
-  "packageManager": "pnpm@11.4.0"
+  "packageManager": "pnpm@11.4.0",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dumkoder/statos.git",
+    "directory": "mcp"
+  },
+  "homepage": "https://github.com/dumkoder/statos/tree/main/mcp",
+  "bugs": {
+    "url": "https://github.com/dumkoder/statos/issues"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "claude",
+    "statos",
+    "soccer",
+    "betting",
+    "api-client"
+  ],
+  "author": "Statos"
 }
