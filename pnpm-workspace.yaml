@@ -1,0 +1,21 @@
+# pnpm 11+ — settings moved here from package.json's `pnpm` field.
+# Mirrors frontend/pnpm-workspace.yaml — same supply-chain hardening pattern.
+
+packages:
+  - .
+
+# Skip the pre-run deps-status check (otherwise spawns a sub-process pnpm
+# install that blocks on the ignored-builds list).
+verifyDepsBeforeRun: false
+confirmModulesPurge: false
+
+# Trusted build scripts — keep minimal.
+onlyBuiltDependencies:
+  - esbuild # native binary fetch, required by vitest
+
+# Explicitly known-and-ignored: suppresses ERR_PNPM_IGNORED_BUILDS without
+# expanding attack surface. List grows if pnpm detects new install scripts.
+ignoredBuiltDependencies: []
+
+allowBuilds:
+  esbuild: set this to true or false
