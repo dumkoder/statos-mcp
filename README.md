@@ -5,24 +5,31 @@ AI assistants — Claude Desktop, Claude Code, claude.ai — to your
 [Statos](https://statos.pro) account's betting suggestions.
 
 Wraps `api.statos.pro` with an API-key-authenticated, AI-friendly tool surface.
-Zero new server-side code: rides on the API-key feature shipped in Statos
-v1.11.0.
+Built on the API-key feature shipped in Statos v1.11.0; the v0.2 backend PR
+extended `BearerAuth` to `/leagues` and `/auth/me` so the full 4-tool surface
+is reachable.
 
 ## Status
 
-**v0.1.0 — early access.** Two of the planned four tools are live (those that
-the existing `BearerAuth` middleware on `/api/v1/suggestions` supports). The
-other two (`list_leagues`, `get_account`) need a small backend `BearerAuth`
-extension on the `/leagues` and `/auth/me` endpoints; they'll land in a
-follow-up release. See [Roadmap](#roadmap).
+**v0.2.0 — early access, full read surface.** All four planned tools are live:
+
+| Tool | Wraps | Required scope |
+|---|---|---|
+| `list_picks` | `GET /api/v1/suggestions` | `read:suggestions` |
+| `get_match_picks` | `GET /api/v1/suggestions` (client-side match filter) | `read:suggestions` |
+| `list_leagues` | `GET /api/v1/leagues` | `read:leagues` |
+| `get_account` | `GET /api/v1/auth/me` | `read:account` |
+
+New API keys minted after the v0.2 backend ships automatically carry all
+three read scopes. Keys minted earlier carry only `read:suggestions` —
+**regenerate** to get access to `list_leagues` and `get_account`.
 
 ## Quick start
 
 ### 1. Get a Statos API key
 
 Log in at <https://statos.pro/account>, open the **API keys** card, and create
-a key with the `read:suggestions` scope. Copy the `statos_sk_live_…` token —
-**Statos shows it once.**
+a key. Copy the `statos_sk_live_…` token — **Statos shows it once.**
 
 ### 2a. Claude Desktop
 
@@ -86,6 +93,26 @@ match X?" queries.
 |---|---|---|
 | `match_id` | integer | The `match_id` field from a `list_picks` response. |
 
+### `list_leagues`
+
+Discover league IDs to filter `list_picks` against. Returns the leagues the
+API-key holder's plan can see, optionally filtered by continent or to the
+curated "specialized" set.
+
+| param | type | default | notes |
+|---|---|---|---|
+| `continent` | string | — | `Europe`, `South America`, `North America`, `Africa`, `Asia`, `Oceania`, `International`. Omit for all. |
+| `specialized_only` | boolean | `false` | If true, only `is_specialized=true` leagues (the curated set the engine biases toward). |
+| `limit` | integer | 200 | Max 500. |
+
+### `get_account`
+
+Read-only account info: email, role, subscription status, and the effective
+role (trial-elevated while a trial is active). Useful for "what plan am I
+on" and figuring out which leagues the user can see.
+
+No input. Returns `{ account, effective_role, notes? }`.
+
 ## Configuration
 
 | Env var | CLI flag | Default | Notes |
@@ -113,11 +140,11 @@ version bump; additive changes (new fields) are minor.
 
 ## Roadmap
 
-- **v0.2** — `list_leagues` tool (needs backend `BearerAuth` on `/leagues`)
-- **v0.2** — `get_account` tool (needs backend `BearerAuth` on `/auth/me`
-  or a new `/api/v1/account/profile` endpoint)
+- ~~v0.2 `list_leagues` + `get_account`~~ ✓ shipped
 - **v0.3** — backend `match_id` filter on `/suggestions` so `get_match_picks`
   doesn't have to fetch+filter client-side
+- **v0.x** — friendlier zod-error rendering (current output is the raw zod
+  issue array; readable but verbose)
 - **v1.0** — remote SSE/HTTP transport for one-click connect (no
   `npx`/install step)
 

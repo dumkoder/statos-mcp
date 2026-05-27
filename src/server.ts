@@ -6,13 +6,15 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 
 import { StatosApiClient } from "./api.js";
+import { getAccount, getAccountInputSchema } from "./tools/get-account.js";
 import {
   getMatchPicks,
   getMatchPicksInputSchema,
 } from "./tools/get-match-picks.js";
+import { listLeagues, listLeaguesInputSchema } from "./tools/list-leagues.js";
 import { listPicks, listPicksInputSchema } from "./tools/list-picks.js";
 
-const PACKAGE_VERSION = "0.1.0";
+const PACKAGE_VERSION = "0.2.0";
 
 // ── Tool JSON-Schemas (advertised in tools/list) ─────────────────────────────
 // Hand-written rather than zod-derived to (a) avoid an extra dependency and
@@ -87,6 +89,46 @@ const getMatchPicksJsonSchema = {
   additionalProperties: false,
 } as const;
 
+const CONTINENTS_ENUM = [
+  "Europe",
+  "South America",
+  "North America",
+  "Africa",
+  "Asia",
+  "Oceania",
+  "International",
+];
+
+const listLeaguesJsonSchema = {
+  type: "object",
+  properties: {
+    continent: {
+      type: "string",
+      enum: CONTINENTS_ENUM,
+      description: "Filter to one continent. Omit for all leagues the API key can see.",
+    },
+    specialized_only: {
+      type: "boolean",
+      description:
+        "If true, return only is_specialized=true leagues — the curated set the suggestion engine biases toward.",
+    },
+    limit: {
+      type: "integer",
+      minimum: 1,
+      maximum: 500,
+      default: 200,
+      description: "Maximum leagues to return (default 200, max 500).",
+    },
+  },
+  additionalProperties: false,
+} as const;
+
+const getAccountJsonSchema = {
+  type: "object",
+  properties: {},
+  additionalProperties: false,
+} as const;
+
 // ── Server factory ───────────────────────────────────────────────────────────
 
 export interface ServerConfig {
@@ -133,6 +175,26 @@ export function createServer(cfg: ServerConfig): Server {
           "to one match.",
         inputSchema: getMatchPicksJsonSchema,
       },
+      {
+        name: "list_leagues",
+        description:
+          "List the soccer leagues the Statos engine tracks (filtered to what the " +
+          "API-key holder's plan permits). Each league carries an `id` you can pass " +
+          "to list_picks for filtering, plus name, country, continent, and an " +
+          "`is_specialized` flag indicating leagues the engine biases toward. Useful " +
+          "for discovery: 'which European leagues can I see?' or 'show me the " +
+          "specialized leagues only'.",
+        inputSchema: listLeaguesJsonSchema,
+      },
+      {
+        name: "get_account",
+        description:
+          "Return the API-key holder's account info: email, role (silver/gold/" +
+          "diamond/admin), subscription status, and the effective role (trial-elevated " +
+          "while a trial is active). Useful for an AI assistant to explain what plan " +
+          "the user is on and which leagues they have access to. Read-only.",
+        inputSchema: getAccountJsonSchema,
+      },
     ],
   }));
 
@@ -153,6 +215,24 @@ export function createServer(cfg: ServerConfig): Server {
           const result = await getMatchPicks(
             api,
             getMatchPicksInputSchema.parse(args),
+          );
+          return {
+            content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+          };
+        }
+        case "list_leagues": {
+          const result = await listLeagues(
+            api,
+            listLeaguesInputSchema.parse(args),
+          );
+          return {
+            content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+          };
+        }
+        case "get_account": {
+          const result = await getAccount(
+            api,
+            getAccountInputSchema.parse(args),
           );
           return {
             content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
