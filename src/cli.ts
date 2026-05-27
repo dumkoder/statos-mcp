@@ -67,12 +67,12 @@ function printHelp(): void {
       "Configure in Claude Desktop ~/Library/Application Support/Claude/claude_desktop_config.json:",
       '  { "mcpServers": { "statos": {',
       '      "command": "npx",',
-      '      "args": ["-y", "@statos/mcp@latest"],',
+      '      "args": ["-y", "@statospro/mcp@latest"],',
       '      "env": { "STATOS_API_KEY": "statos_sk_live_…" }',
       "  } } }",
       "",
       "Configure in Claude Code:",
-      "  claude mcp add statos -- npx -y @statos/mcp@latest --api-key statos_sk_live_…",
+      "  claude mcp add statos -- npx -y @statospro/mcp@latest --api-key statos_sk_live_…",
       "",
     ].join("\n"),
   );
@@ -88,7 +88,7 @@ async function main(): Promise<void> {
   if (args.version) {
     // Read from package.json at runtime would force a JSON import; keep it
     // simple — version is also baked into User-Agent via server.ts.
-    process.stderr.write("@statos/mcp 0.2.0\n");
+    process.stderr.write("@statospro/mcp 0.2.0\n");
     process.exit(0);
   }
 

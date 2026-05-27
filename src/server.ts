@@ -144,11 +144,11 @@ export function createServer(cfg: ServerConfig): Server {
   const api = new StatosApiClient({
     apiKey: cfg.apiKey,
     baseUrl: cfg.baseUrl,
-    userAgent: `@statos/mcp/${PACKAGE_VERSION}`,
+    userAgent: `@statospro/mcp/${PACKAGE_VERSION}`,
   });
 
   const server = new Server(
-    { name: "@statos/mcp", version: PACKAGE_VERSION },
+    { name: "@statospro/mcp", version: PACKAGE_VERSION },
     { capabilities: { tools: {} } },
   );
 

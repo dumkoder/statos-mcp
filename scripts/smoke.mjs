@@ -1,4 +1,4 @@
-// scripts/smoke.mjs — protocol-level end-to-end smoke for @statos/mcp.
+// scripts/smoke.mjs — protocol-level end-to-end smoke for @statospro/mcp.
 //
 // Spawns the built CLI (dist/cli.js) as a child process speaking stdio,
 // exchanges real JSON-RPC messages, and prints what comes back. Mimics what
@@ -94,7 +94,7 @@ function showContent(result, max = 400) {
 }
 
 async function main() {
-  sectionHeader(`@statos/mcp smoke — using ${usingBogusKey ? "BOGUS" : "real"} key against ${apiBase}`);
+  sectionHeader(`@statospro/mcp smoke — using ${usingBogusKey ? "BOGUS" : "real"} key against ${apiBase}`);
 
   // 1. initialize handshake
   sectionHeader("1. initialize");
@@ -104,8 +104,8 @@ async function main() {
     clientInfo: { name: "smoke", version: "1.0.0" },
   });
   console.log(preview(init.result));
-  if (!init.result || init.result.serverInfo?.name !== "@statos/mcp") {
-    console.error("FAIL: initialize did not return expected serverInfo.name=@statos/mcp");
+  if (!init.result || init.result.serverInfo?.name !== "@statospro/mcp") {
+    console.error("FAIL: initialize did not return expected serverInfo.name=@statospro/mcp");
     process.exit(1);
   }
   child.stdin.write(JSON.stringify({ jsonrpc: "2.0", method: "notifications/initialized" }) + "\n");
@@ -120,13 +120,15 @@ async function main() {
     console.log(`  • ${t.name} — input: { ${props} }`);
     console.log(`    description: ${t.description.slice(0, 100)}...`);
   }
-  if (tools.length !== 2) {
-    console.error(`FAIL: expected 2 tools, got ${tools.length}`);
+  // v0.2 surface: list_picks, get_match_picks, list_leagues, get_account.
+  const expectedTools = ["get_account", "get_match_picks", "list_leagues", "list_picks"];
+  if (tools.length !== expectedTools.length) {
+    console.error(`FAIL: expected ${expectedTools.length} tools, got ${tools.length}`);
     process.exit(1);
   }
   const names = tools.map((t) => t.name).sort();
-  if (JSON.stringify(names) !== JSON.stringify(["get_match_picks", "list_picks"])) {
-    console.error(`FAIL: expected tools [get_match_picks, list_picks], got ${JSON.stringify(names)}`);
+  if (JSON.stringify(names) !== JSON.stringify(expectedTools)) {
+    console.error(`FAIL: expected ${JSON.stringify(expectedTools)}, got ${JSON.stringify(names)}`);
     process.exit(1);
   }
 

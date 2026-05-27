@@ -1,4 +1,4 @@
-# @statos/mcp
+# @statospro/mcp
 
 A [Model Context Protocol](https://modelcontextprotocol.io) server that connects
 AI assistants — Claude Desktop, Claude Code, claude.ai — to your
@@ -41,7 +41,7 @@ or `%APPDATA%\Claude\claude_desktop_config.json` (Windows):
   "mcpServers": {
     "statos": {
       "command": "npx",
-      "args": ["-y", "@statos/mcp@latest"],
+      "args": ["-y", "@statospro/mcp@latest"],
       "env": {
         "STATOS_API_KEY": "statos_sk_live_xxxxxxxx"
       }
@@ -55,13 +55,13 @@ Restart Claude Desktop. The new tools appear in the tools picker.
 ### 2b. Claude Code
 
 ```bash
-claude mcp add statos -- npx -y @statos/mcp@latest --api-key statos_sk_live_xxxxxxxx
+claude mcp add statos -- npx -y @statospro/mcp@latest --api-key statos_sk_live_xxxxxxxx
 ```
 
 ### 2c. Test against sandbox first (optional)
 
 ```bash
-claude mcp add statos-sandbox -- npx -y @statos/mcp@latest \
+claude mcp add statos-sandbox -- npx -y @statospro/mcp@latest \
   --api-key statos_sk_test_xxxxxxxx \
   --api-base https://api.sandbox.statos.pro
 ```
@@ -134,7 +134,7 @@ No input. Returns `{ account, effective_role, notes? }`.
 ## Versioning
 
 The npm package version is independent of the Statos API version. The server
-sends `User-Agent: @statos/mcp/<version>` so backend logs can correlate.
+sends `User-Agent: @statospro/mcp/<version>` so backend logs can correlate.
 Breaking changes to Statos's `/suggestions` schema will trigger a major
 version bump; additive changes (new fields) are minor.
 

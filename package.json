@@ -1,5 +1,5 @@
 {
-  "name": "@statos/mcp",
+  "name": "@statospro/mcp",
   "version": "0.2.0",
   "description": "Model Context Protocol server for Statos — connect AI assistants (Claude Desktop, Claude Code) to Statos picks.",
   "type": "module",
