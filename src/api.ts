@@ -60,6 +60,41 @@ export class StatosApiClient {
 
     return (await res.json()) as T;
   }
+
+  /** POST a JSON body and return the parsed JSON response. */
+  async post<T>(path: string, body: unknown): Promise<T> {
+    return this.send<T>("POST", path, body);
+  }
+
+  /** DELETE an endpoint and return the parsed JSON response. */
+  async delete<T>(path: string): Promise<T> {
+    return this.send<T>("DELETE", path);
+  }
+
+  private async send<T>(method: string, path: string, body?: unknown): Promise<T> {
+    const url = new URL(path, this.cfg.baseUrl);
+    const res = await fetch(url, {
+      method,
+      headers: {
+        Authorization: `Bearer ${this.cfg.apiKey}`,
+        "User-Agent": this.cfg.userAgent,
+        Accept: "application/json",
+        ...(body !== undefined ? { "Content-Type": "application/json" } : {}),
+      },
+      ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      throw new StatosApiError(
+        res.status,
+        text,
+        `Statos API ${res.status} on ${method} ${path}: ${text.slice(0, 200)}`,
+      );
+    }
+
+    return (await res.json()) as T;
+  }
 }
 
 /**

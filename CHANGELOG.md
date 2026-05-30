@@ -5,6 +5,25 @@ All notable changes to `@statospro/mcp`.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.3.0] — 2026-05-30
+
+Minor — three new admin tools for the World Cup mid-tournament kill switch
+(sprint D). No changes to the existing read tools.
+
+### Added
+
+- `suppress_market` — stop emission for a (league × market) for N hours without
+  a deploy (`POST /api/v1/admin/market-suppressions`). `league_id: 0` = all leagues.
+- `list_suppressions` — list active suppressions (`GET`).
+- `unsuppress_market` — cancel a suppression by id (`DELETE …/:id`).
+- `StatosApiClient.post` / `.delete` for write-path tools.
+
+### Requires
+
+- An **admin-role** API key carrying the new `admin:market_suppressions` scope
+  (not in the default scope set — minted manually). Backend ≥ the v1.16 release
+  that ships the `market_suppressions` table + endpoints.
+
 ## [0.2.1] — 2026-05-27
 
 Polish release. Pure metadata + UX; no protocol or behaviour changes.

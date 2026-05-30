@@ -12,6 +12,14 @@ import {
 } from "./tools/get-match-picks.js";
 import { listLeagues, listLeaguesInputSchema } from "./tools/list-leagues.js";
 import { listPicks, listPicksInputSchema } from "./tools/list-picks.js";
+import {
+  suppressMarket,
+  suppressMarketInputSchema,
+  listSuppressions,
+  listSuppressionsInputSchema,
+  unsuppressMarket,
+  unsuppressMarketInputSchema,
+} from "./tools/market-suppressions.js";
 import { formatToolError } from "./util/format-error.js";
 
 const PACKAGE_VERSION = "0.2.1";
@@ -129,6 +137,51 @@ const getAccountJsonSchema = {
   additionalProperties: false,
 } as const;
 
+const suppressMarketJsonSchema = {
+  type: "object",
+  properties: {
+    market_type: {
+      type: "string",
+      description:
+        "Market to suppress, e.g. 'cards', 'corners', 'over_under', '1x2', 'asian_handicap', 'draw_no_bet'.",
+    },
+    league_id: {
+      type: "integer",
+      minimum: 0,
+      default: 0,
+      description: "League to scope to. 0 (default) = wildcard, all leagues. Use a specific id (e.g. the WC league) to scope.",
+    },
+    hours: {
+      type: "integer",
+      minimum: 1,
+      maximum: 720,
+      default: 24,
+      description: "Active window in hours (default 24, max 720).",
+    },
+    reason: {
+      type: "string",
+      description: "Free-text rationale, e.g. 'cards 30% below claimed hit rate on n=18'.",
+    },
+  },
+  required: ["market_type"],
+  additionalProperties: false,
+} as const;
+
+const listSuppressionsJsonSchema = {
+  type: "object",
+  properties: {},
+  additionalProperties: false,
+} as const;
+
+const unsuppressMarketJsonSchema = {
+  type: "object",
+  properties: {
+    id: { type: "integer", minimum: 1, description: "Suppression id to cancel." },
+  },
+  required: ["id"],
+  additionalProperties: false,
+} as const;
+
 // ── Server factory ───────────────────────────────────────────────────────────
 
 export interface ServerConfig {
@@ -213,6 +266,29 @@ export function createServer(cfg: ServerConfig): Server {
           "the user is on and which leagues they have access to. Read-only.",
         inputSchema: getAccountJsonSchema,
       },
+      {
+        name: "suppress_market",
+        description:
+          "ADMIN kill switch: stop Statos emitting a (league × market) for a time window " +
+          "WITHOUT a deploy — e.g. during the World Cup if 'cards' starts firing 30% below " +
+          "claimed hit rate. Requires an admin key with the admin:market_suppressions scope. " +
+          "league_id 0 = all leagues. Reversible via unsuppress_market or expiry. Use sparingly.",
+        inputSchema: suppressMarketJsonSchema,
+      },
+      {
+        name: "list_suppressions",
+        description:
+          "List the currently active market suppressions (the kill switches in effect). " +
+          "Read-only; same admin scope as suppress_market.",
+        inputSchema: listSuppressionsJsonSchema,
+      },
+      {
+        name: "unsuppress_market",
+        description:
+          "Cancel an active market suppression by id, immediately restoring emission " +
+          "(within ~60s). Requires the admin:market_suppressions scope.",
+        inputSchema: unsuppressMarketJsonSchema,
+      },
     ],
   }));
 
@@ -251,6 +327,33 @@ export function createServer(cfg: ServerConfig): Server {
           const result = await getAccount(
             api,
             getAccountInputSchema.parse(args),
+          );
+          return {
+            content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+          };
+        }
+        case "suppress_market": {
+          const result = await suppressMarket(
+            api,
+            suppressMarketInputSchema.parse(args),
+          );
+          return {
+            content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+          };
+        }
+        case "list_suppressions": {
+          const result = await listSuppressions(
+            api,
+            listSuppressionsInputSchema.parse(args),
+          );
+          return {
+            content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+          };
+        }
+        case "unsuppress_market": {
+          const result = await unsuppressMarket(
+            api,
+            unsuppressMarketInputSchema.parse(args),
           );
           return {
             content: [{ type: "text", text: JSON.stringify(result, null, 2) }],

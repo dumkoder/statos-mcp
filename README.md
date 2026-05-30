@@ -19,10 +19,19 @@ is reachable.
 | `get_match_picks` | `GET /api/v1/suggestions` (client-side match filter) | `read:suggestions` |
 | `list_leagues` | `GET /api/v1/leagues` | `read:leagues` |
 | `get_account` | `GET /api/v1/auth/me` | `read:account` |
+| `suppress_market` | `POST /api/v1/admin/market-suppressions` | `admin:market_suppressions` + admin role |
+| `list_suppressions` | `GET /api/v1/admin/market-suppressions` | `admin:market_suppressions` + admin role |
+| `unsuppress_market` | `DELETE /api/v1/admin/market-suppressions/:id` | `admin:market_suppressions` + admin role |
 
 New API keys minted after the v0.2 backend ships automatically carry all
 three read scopes. Keys minted earlier carry only `read:suggestions` —
 **regenerate** to get access to `list_leagues` and `get_account`.
+
+The v0.3 **market-suppression** tools are the mid-tournament kill switch
+(WC sprint D): an admin can stop Statos emitting a (league × market) for a
+time window without a deploy. They require an **admin-role** key carrying the
+`admin:market_suppressions` scope (NOT in the default scope set — minted
+manually for admin keys only). `league_id: 0` is a wildcard (all leagues).
 
 ## Quick start
 
