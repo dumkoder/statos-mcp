@@ -2,16 +2,21 @@
 
 A [Model Context Protocol](https://modelcontextprotocol.io) server that connects
 AI assistants — Claude Desktop, Claude Code, claude.ai — to your
-[Statos](https://statos.pro) account's betting suggestions.
+[Statos](https://statos.pro) account.
 
-Wraps `api.statos.pro` with an API-key-authenticated, AI-friendly tool surface.
-Built on the API-key feature shipped in Statos v1.11.0; the v0.2 backend PR
-extended `BearerAuth` to `/leagues` and `/auth/me` so the full 4-tool surface
-is reachable.
+Statos is a football analytics platform: it models match outcomes across ten
+markets and prices them against live bookmaker odds. This package wraps the
+`api.statos.pro` REST surface in an API-key-authenticated, AI-friendly tool
+layer, so an assistant can answer "what does the model like today?" without you
+writing a single HTTP call.
 
-## Status
+```
+npx -y @statospro/mcp@latest --api-key statos_sk_live_xxxxxxxx
+```
 
-**v0.2.0 — early access, full read surface.** All four planned tools are live:
+## Tools
+
+**v0.3.0 — full read surface plus admin controls.**
 
 | Tool | Wraps | Required scope |
 |---|---|---|
@@ -23,22 +28,22 @@ is reachable.
 | `list_suppressions` | `GET /api/v1/admin/market-suppressions` | `admin:market_suppressions` + admin role |
 | `unsuppress_market` | `DELETE /api/v1/admin/market-suppressions/:id` | `admin:market_suppressions` + admin role |
 
-New API keys minted after the v0.2 backend ships automatically carry all
-three read scopes. Keys minted earlier carry only `read:suggestions` —
-**regenerate** to get access to `list_leagues` and `get_account`.
+The four read tools are available to any account. The three **market-suppression**
+tools are an operational kill switch — they let an admin stop the engine emitting
+a (league × market) combination for a time window without shipping a deploy.
+They require an admin-role key carrying the `admin:market_suppressions` scope,
+which is not in the default scope set.
 
-The v0.3 **market-suppression** tools are the mid-tournament kill switch
-(WC sprint D): an admin can stop Statos emitting a (league × market) for a
-time window without a deploy. They require an **admin-role** key carrying the
-`admin:market_suppressions` scope (NOT in the default scope set — minted
-manually for admin keys only). `league_id: 0` is a wildcard (all leagues).
+> **Upgrading from v0.1?** API keys minted before the v0.2 release carry only
+> `read:suggestions`. **Regenerate** your key to pick up `read:leagues` and
+> `read:account`, or `list_leagues` and `get_account` will 403.
 
 ## Quick start
 
 ### 1. Get a Statos API key
 
-Log in at <https://statos.pro/account>, open the **API keys** card, and create
-a key. Copy the `statos_sk_live_…` token — **Statos shows it once.**
+Log in at <https://statos.pro/account>, open the **API keys** card, and create a
+key. Copy the `statos_sk_live_…` token — **Statos shows it once.**
 
 ### 2a. Claude Desktop
 
@@ -59,7 +64,7 @@ or `%APPDATA%\Claude\claude_desktop_config.json` (Windows):
 }
 ```
 
-Restart Claude Desktop. The new tools appear in the tools picker.
+Restart Claude Desktop. The tools appear in the tools picker.
 
 ### 2b. Claude Code
 
@@ -75,27 +80,27 @@ claude mcp add statos-sandbox -- npx -y @statospro/mcp@latest \
   --api-base https://api.sandbox.statos.pro
 ```
 
-## Tools
+## Tool reference
 
 ### `list_picks`
 
-List Statos's current betting suggestions, optionally filtered.
+List the model's current suggestions, optionally filtered.
 
 | param | type | default | notes |
 |---|---|---|---|
 | `league_id` | integer | — | Single league. Omit for all visible leagues. |
 | `markets` | string[] | — | `1x2`, `over_under`, `btts`, `asian_handicap`, `corners`, `cards`, `draw_no_bet`, `double_chance`, `goal_range`, `team_to_score`. Omit for all. |
-| `min_edge_pct` | number | 0 | Picks without odds attached are always kept. |
+| `min_edge_pct` | number | 0 | Suggestions without odds attached are always kept. |
 | `quality` | string | `all` | `all` (no floor), `strong` (≥65%), `elite` (≥85%). |
 | `limit` | integer | 50 | Max 200. |
 
 Returns an array of `BetSuggestion` objects (match info, market, selection,
-suggested_prob, best_odds, edge, confidence) plus filter metadata and any
+`suggested_prob`, `best_odds`, edge, confidence) plus filter metadata and any
 truncation notes.
 
 ### `get_match_picks`
 
-Fetch every pick for a single match — useful for "what does Statos think about
+Every suggestion for a single match — for "what does the model think about
 match X?" queries.
 
 | param | type | notes |
@@ -105,75 +110,69 @@ match X?" queries.
 ### `list_leagues`
 
 Discover league IDs to filter `list_picks` against. Returns the leagues the
-API-key holder's plan can see, optionally filtered by continent or to the
-curated "specialized" set.
+key holder's plan can see.
 
 | param | type | default | notes |
 |---|---|---|---|
 | `continent` | string | — | `Europe`, `South America`, `North America`, `Africa`, `Asia`, `Oceania`, `International`. Omit for all. |
-| `specialized_only` | boolean | `false` | If true, only `is_specialized=true` leagues (the curated set the engine biases toward). |
+| `specialized_only` | boolean | `false` | Only `is_specialized=true` leagues (the curated set the engine biases toward). |
 | `limit` | integer | 200 | Max 500. |
 
 ### `get_account`
 
-Read-only account info: email, role, subscription status, and the effective
-role (trial-elevated while a trial is active). Useful for "what plan am I
-on" and figuring out which leagues the user can see.
+Read-only account info: email, role, subscription status, and effective role
+(trial-elevated while a trial is active). Useful for "what plan am I on" and for
+working out which leagues are visible.
 
 No input. Returns `{ account, effective_role, notes? }`.
+
+### `suppress_market` / `list_suppressions` / `unsuppress_market`
+
+Admin-only. `suppress_market` takes `league_id` (0 = all leagues), `market`, and
+`duration_hours`; the others take nothing and an `id` respectively. Requires
+backend ≥ v1.16.
 
 ## Configuration
 
 | Env var | CLI flag | Default | Notes |
 |---|---|---|---|
 | `STATOS_API_KEY` | `--api-key <key>` | — | **Required.** |
-| `STATOS_API_BASE` | `--api-base <url>` | `https://api.statos.pro` | Use `https://api.sandbox.statos.pro` to point at sandbox. |
+| `STATOS_API_BASE` | `--api-base <url>` | `https://api.statos.pro` | Point at `https://api.sandbox.statos.pro` for sandbox. |
 
 ## Troubleshooting
 
-- **`401: invalid or revoked API key`** — the key was deleted in the Statos
-  UI, or you copied a truncated token. Regenerate at `/account → API keys`.
+- **`401: invalid or revoked API key`** — the key was deleted in the Statos UI,
+  or the token was truncated on copy. Regenerate at `/account → API keys`.
 - **`401: missing or malformed Authorization header`** — the env var or
-  `--api-key` flag isn't reaching the server process. Restart your MCP
-  client after editing config files.
-- **No picks returned for any filter** — could be a quiet day for the model,
-  or your plan's `allowed_league_groups` excludes the leagues you asked for.
-  Try `list_picks` with no filters first.
+  `--api-key` flag isn't reaching the server process. Restart your MCP client
+  after editing config files.
+- **`403` on `list_leagues` / `get_account`** — your key predates v0.2 and lacks
+  the scopes. Regenerate it.
+- **No picks for any filter** — either a quiet day for the model, or your plan's
+  league entitlements exclude what you asked for. Try `list_picks` with no
+  filters first.
 
 ## Versioning
 
-The npm package version is independent of the Statos API version. The server
-sends `User-Agent: @statospro/mcp/<version>` so backend logs can correlate.
-Breaking changes to Statos's `/suggestions` schema will trigger a major
-version bump; additive changes (new fields) are minor.
+The package version is independent of the Statos API version. The server sends
+`User-Agent: @statospro/mcp/<version>` so backend logs can correlate. Breaking
+changes to the `/suggestions` schema trigger a major bump; additive changes
+(new fields) are minor. See [CHANGELOG.md](./CHANGELOG.md).
 
 ## Roadmap
 
-- ~~v0.2 `list_leagues` + `get_account`~~ ✓ shipped
-- **v0.3** — backend `match_id` filter on `/suggestions` so `get_match_picks`
-  doesn't have to fetch+filter client-side
-- **v0.x** — friendlier zod-error rendering (current output is the raw zod
-  issue array; readable but verbose)
-- **v1.0** — remote SSE/HTTP transport for one-click connect (no
-  `npx`/install step)
+- ~~v0.2 — `list_leagues` + `get_account`~~ ✓ shipped
+- ~~v0.3 — market-suppression tools~~ ✓ shipped
+- **v0.4** — backend `match_id` filter on `/suggestions`, so `get_match_picks`
+  stops fetching and filtering client-side
+- **v0.x** — friendlier zod-error rendering (currently the raw issue array —
+  readable, but verbose)
+- **v1.0** — remote SSE/HTTP transport for one-click connect, no `npx` step
 
-## Local development
+## Requirements
 
-```bash
-pnpm install
-pnpm test
-pnpm build
-pnpm dev --api-key statos_sk_test_xxxxxxxx
-```
-
-To smoke against a running Claude Code locally:
-
-```bash
-pnpm build
-claude mcp add statos-dev -- node "$PWD/dist/cli.js" --api-key statos_sk_test_xxxxxxxx
-```
+Node.js ≥ 20. A Statos account with an API key.
 
 ## License
 
-UNLICENSED — internal Statos package. Distribution rights TBD before npm
-publish.
+MIT — see [LICENSE](./LICENSE).

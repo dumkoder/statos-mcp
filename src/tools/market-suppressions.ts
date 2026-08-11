@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import type { StatosApiClient } from "../api.js";
 
-// Mid-tournament market kill switch (WC sprint D). These tools wrap the admin
+// Operational market kill switch. These tools wrap the admin
 // market-suppressions endpoints. They require an API key with both the
 // `admin:market_suppressions` scope AND an admin-role holder — a read-only key
 // cannot disable emission. Use sparingly: suppression stops Statos emitting a

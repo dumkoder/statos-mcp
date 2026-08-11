@@ -40,12 +40,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/dumkoder/statos.git",
-    "directory": "mcp"
+    "url": "git+https://github.com/dumkoder/statos-mcp.git"
   },
-  "homepage": "https://github.com/dumkoder/statos/tree/main/mcp",
+  "homepage": "https://statos.pro",
   "bugs": {
-    "url": "https://github.com/dumkoder/statos/issues"
+    "url": "https://github.com/dumkoder/statos-mcp/issues"
   },
   "keywords": [
     "mcp",

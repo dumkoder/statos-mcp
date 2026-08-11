@@ -1,8 +1,8 @@
 // Thin wrapper around `fetch` that injects the Statos API-key Bearer header
 // and resolves the API base URL.  Used by every tool.
 //
-// Auth model: PR #145's BearerAuth middleware accepts a `statos_sk_live_…`
-// or `statos_sk_test_…` token in the Authorization header.  We do nothing
+// Auth model: the Statos API accepts a `statos_sk_live_…` or `statos_sk_test_…`
+// token as a Bearer credential in the Authorization header.  We do nothing
 // fancy — just forward whatever key the operator gave us.
 
 export interface ApiClientConfig {
