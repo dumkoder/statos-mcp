@@ -6,12 +6,15 @@ on:
   pull_request:
 
 jobs:
+  # pnpm 11 requires Node >= 22.13 to run, so the toolchain matrix starts at 22.
+  # The published package supports Node >= 20 — that floor is checked by the
+  # `engines-floor` job below, which runs the built artifact on Node 20.
   build-and-test:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        node-version: [20, 22]
+        node-version: [22, 24]
 
     steps:
       - uses: actions/checkout@v4
@@ -36,3 +39,34 @@ jobs:
 
       - name: Build
         run: pnpm run build
+
+  # Verify the `engines: node >= 20` claim in package.json actually holds by
+  # executing the compiled CLI under Node 20.
+  engines-floor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.4.0
+
+      - name: Build with a pnpm-compatible Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run build
+
+      - name: Switch to the minimum supported Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Run the built CLI on Node 20
+        run: |
+          node --version
+          node dist/cli.js --version
+          node dist/cli.js --help
