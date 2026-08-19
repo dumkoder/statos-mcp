@@ -24,6 +24,19 @@ Minor — three new admin tools for the World Cup mid-tournament kill switch
   (not in the default scope set — minted manually). Backend ≥ the v1.16 release
   that ships the `market_suppressions` table + endpoints.
 
+### Changed
+
+- Package metadata now points at the public
+  [`dumkoder/statos-mcp`](https://github.com/dumkoder/statos-mcp) repo
+  (`repository`, `bugs`) and `https://statos.pro` (`homepage`), replacing the
+  private-monorepo paths that npm could not resolve.
+- README rewritten for a reader who has never heard of Statos: leads with what
+  the platform is and a one-line `npx` invocation, and drops references to
+  internal PR numbers and sprint names. Source comments likewise describe the
+  auth model rather than citing the PR that introduced it.
+- Added `RELEASING.md` (not published) recording which copy of the package is
+  the source of truth and why publishes go out with `npm`, not `pnpm`.
+
 ## [0.2.1] — 2026-05-27
 
 Polish release. Pure metadata + UX; no protocol or behaviour changes.
